@@ -36,8 +36,20 @@ CREATE TABLE faq_cache (
   UNIQUE(canonical_key, intent, provider)
 );
 
+CREATE TABLE model_artifacts (
+  id          BIGSERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,                 -- e.g., 'intent_lr_tfidf'
+  version     TEXT NOT NULL,                 -- e.g., '2025-09-30_01'
+  sha256      TEXT,                          -- Makes sure were loading the model we stored
+  uri         TEXT NOT NULL,                 -- Stores the path to the model
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  is_active   BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+
 CREATE TABLE request_log (
   id            BIGSERIAL PRIMARY KEY,
+  model_id      BIGINT REFERENCES model_artifacts(id) ON DELETE SET NULL,
   received_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   token_id      BIGINT REFERENCES auth_tokens(id) ON DELETE SET NULL,
   user_id       BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -51,19 +63,6 @@ CREATE TABLE request_log (
   error_text    TEXT
 );
 
-
-------------------------------------------------------------
--- OPTIONAL: MODEL ARTIFACTS (versioning TF-IDF + LR)
-------------------------------------------------------------
-CREATE TABLE model_artifacts (
-  id          BIGSERIAL PRIMARY KEY,
-  name        TEXT NOT NULL,                 -- e.g., 'intent_lr_tfidf'
-  version     TEXT NOT NULL,                 -- e.g., '2025-09-30_01'
-  sha256      TEXT,                          -- Makes sure were loading the model we stored
-  uri         TEXT NOT NULL,                 -- Stores the path to the model
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  is_active   BOOLEAN NOT NULL DEFAULT FALSE
-);
 
 
 -------------------------------------- ----------VIEWS -----------------------------------------
